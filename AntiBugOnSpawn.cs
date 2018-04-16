@@ -13,25 +13,11 @@ namespace AntiBugOnSpawn
 {
     public class AntiBugOnSpawn : Fougerite.Module
     {
-        public override string Name
-        {
-            get { return "AntiBugOnSpawn"; }
-        }
+        public override string Name { get { return "AntiBugOnSpawn"; } }
+        public override string Author { get { return "Salva/Juli"; } }
+        public override string Description { get { return "AntiBugOnSpawn"; } }
+        public override Version Version { get { return new Version("1.2"); } }
 
-        public override string Author
-        {
-            get { return "Salva/Juli"; }
-        }
-
-        public override string Description
-        {
-            get { return "AntiBugOnSpawn"; }
-        }
-
-        public override Version Version
-        {
-            get { return new Version("1.1"); }
-        }
         private string red = "[color #B40404]";
         private string blue = "[color #81F7F3]";
         private string green = "[color #82FA58]";
@@ -44,23 +30,29 @@ namespace AntiBugOnSpawn
         public static IniParser ClansIni;
 
         public static System.Random rnd;
+        public bool PluginEnabled = false;
         public bool RustPPSupport = false;
         public bool ClansSupport = false;
 
         public override void Initialize()
         {
-            Fougerite.Hooks.OnCommand += OnCommand;
-            Fougerite.Hooks.OnPlayerSpawned += OnPlayerSpawned;
-            Fougerite.Hooks.OnModulesLoaded += OnModulesLoaded;
+            Hooks.OnModulesLoaded += OnModulesLoaded;
+            Hooks.OnServerLoaded += OnServerLoaded;
+            Hooks.OnCommand += OnCommand;
+            Hooks.OnPlayerSpawned += OnPlayerSpawned;
+            
+
             rnd = new System.Random();
             cfg = new IniParser(Path.Combine(ModuleFolder, "DefaultLoc.ini"));
         }
 
         public override void DeInitialize()
         {
-            Fougerite.Hooks.OnCommand -= OnCommand;
-            Fougerite.Hooks.OnPlayerSpawned -= OnPlayerSpawned;
-            Fougerite.Hooks.OnModulesLoaded -= OnModulesLoaded;
+            Hooks.OnModulesLoaded -= OnModulesLoaded;
+            Hooks.OnServerLoaded -= OnServerLoaded;
+            Hooks.OnCommand -= OnCommand;
+            Hooks.OnPlayerSpawned -= OnPlayerSpawned;
+            
         }
 
         public void OnModulesLoaded()
@@ -69,12 +61,13 @@ namespace AntiBugOnSpawn
             if (Fougerite.Server.GetServer().HasRustPP)
             {
                 RustPPSupport = true;
-                ConsoleSystem.Print( "Plugin " + Name + " " + Version.ToString() + " Integration with Rust++ OK!!");
+                ConsoleSystem.Print("Plugin " + Name + " " + Version.ToString() + " Integration with Rust++ OK!!");
                 if (File.Exists(Directory.GetCurrentDirectory() + "\\save\\PyPlugins\\Clans\\Clans.ini"))
                 {
                     ClansSupport = true;
                     ClansIni = new IniParser(Directory.GetCurrentDirectory() + "\\save\\PyPlugins\\Clans\\Clans.ini");
                     ConsoleSystem.Print("Plugin " + Name + " " + Version.ToString() + " Integration with Clans OK!!");
+                    //Logger.LogWarning("FOUGERITE");
                 }
                 else
                 {
@@ -90,6 +83,13 @@ namespace AntiBugOnSpawn
             }
             ConsoleSystem.Print("");
         }
+
+        public void OnServerLoaded()
+        {
+            char comillas = '"';
+            ConsoleSystem.Run("sleepers.on " + comillas + "false" + comillas, false);
+            Timer1(5 * 60000, null).Start();
+        }
         public void OnCommand(Fougerite.Player player, string cmd, string[] args)
         {
             if (cmd == "antibug")
@@ -104,6 +104,11 @@ namespace AntiBugOnSpawn
         }
         public void OnPlayerSpawned(Fougerite.Player player, SpawnEvent se)
         {
+            if (!PluginEnabled)
+            {
+                return;
+            }
+
             if (RustPPSupport == true)
             {
                 foreach (Fougerite.Entity xx in Util.GetUtil().FindEntitiesAround(player.Location, 5f))
@@ -186,7 +191,7 @@ namespace AntiBugOnSpawn
         {
             string nombredelclan = "XXXXXXXXXXXXX";
             if (ClansIni.ContainsSetting("ClanOwners", IDjugador))
-            { 
+            {
                 nombredelclan = ClansIni.GetSetting("ClanOwners", IDjugador);
             }
             else
@@ -243,6 +248,23 @@ namespace AntiBugOnSpawn
             Vector3 v = Util.GetUtil().ConvertStringToVector3(l);
             player.SafeTeleportTo(v);//ATENCION SAFE TELEPORT
             return;
+        }
+
+        public TimedEvent Timer1(int timeoutDelay, Dictionary<string, object> args)
+        {
+            TimedEvent timedEvent = new TimedEvent(timeoutDelay);
+            timedEvent.Args = args;
+            timedEvent.OnFire += CallBack;
+            return timedEvent;
+        }
+        public void CallBack(TimedEvent e)
+        {
+            e.Kill();
+            PluginEnabled = true;
+            char comillas = '"';
+            ConsoleSystem.Run("sleepers.on " + comillas + "true" + comillas, false);
+            Logger.Log(Name + Version + " Enabled after 5 mins of Server Restart");
+            ConsoleSystem.Print(Name + Version + " Enabled after 5 mins of Server Restart");
         }
     }
 }

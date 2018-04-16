@@ -43,7 +43,8 @@
     <Reference Include="Facepunch.MeshBatch">
       <HintPath>.\Facepunch.MeshBatch.dll</HintPath>
     </Reference>
-    <Reference Include="Fougerite">
+    <Reference Include="Fougerite, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Fougerite.dll</HintPath>
     </Reference>
     <Reference Include="RustPP">
@@ -60,8 +61,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AntiBugOnSpawn.cs" />
+    <Compile Include="AntiBugOnSpawn.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimedEvent.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
